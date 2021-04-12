@@ -170,6 +170,8 @@ Returns a Promise with a list of albums
   * `Videos`
   * `Photos`
 
+* `includeSmartAlbums` : {boolean} : Whether to include smart albums in results. Defaults to `false`.
+
 **Returns:**
 
 Array of `Album` object

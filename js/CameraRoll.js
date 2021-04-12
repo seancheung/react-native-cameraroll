@@ -130,6 +130,7 @@ export type SaveToCameraRollOptions = {
 
 export type GetAlbumsParams = {
   assetType?: $Keys<typeof ASSET_TYPE_OPTIONS>,
+  includeSmartAlbums?: boolean,
 };
 
 export type Album = {

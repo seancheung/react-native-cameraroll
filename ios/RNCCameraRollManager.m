@@ -201,20 +201,28 @@ RCT_EXPORT_METHOD(getAlbums:(NSDictionary *)params
                   reject:(RCTPromiseRejectBlock)reject)
 {
   NSString *const mediaType = [params objectForKey:@"assetType"] ? [RCTConvert NSString:params[@"assetType"]] : @"All";
+  BOOL const includeSmartAlbums = [params objectForKey:@"includeSmartAlbums"] ? [RCTConvert BOOL:params[@"includeSmartAlbums"]] : NO;
   PHFetchOptions* options = [[PHFetchOptions alloc] init];
-  PHFetchResult<PHAssetCollection *> *const assetCollectionFetchResult = [PHAssetCollection fetchAssetCollectionsWithType:PHAssetCollectionTypeAlbum subtype:PHAssetCollectionSubtypeAny options:options];
+  PHFetchResult *userAlbums = [PHAssetCollection fetchAssetCollectionsWithType:PHAssetCollectionTypeAlbum subtype:PHAssetCollectionSubtypeAny options:options];
+  NSArray *fetchResults = @[userAlbums];
+  if (includeSmartAlbums) {
+    PHFetchResult *smartAlbums = [PHAssetCollection fetchAssetCollectionsWithType:PHAssetCollectionTypeSmartAlbum subtype:PHAssetCollectionSubtypeAny options:options];
+    fetchResults = [fetchResults arrayByAddingObject:smartAlbums];
+  }
   NSMutableArray * result = [NSMutableArray new];
-  [assetCollectionFetchResult enumerateObjectsUsingBlock:^(PHAssetCollection * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
-    PHFetchOptions *const assetFetchOptions = [RCTConvert PHFetchOptionsFromMediaType:mediaType fromTime:0 toTime:0];
-    // Enumerate assets within the collection
-    PHFetchResult<PHAsset *> *const assetsFetchResult = [PHAsset fetchAssetsInAssetCollection:obj options:assetFetchOptions];
-    if (assetsFetchResult.count > 0) {
-      [result addObject:@{
-        @"title": [obj localizedTitle],
-        @"count": @(assetsFetchResult.count)
-      }];
-    }
-  }];
+  for (PHFetchResult *assetCollectionFetchResult in fetchResults) {
+    [assetCollectionFetchResult enumerateObjectsUsingBlock:^(PHAssetCollection * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+      PHFetchOptions *const assetFetchOptions = [RCTConvert PHFetchOptionsFromMediaType:mediaType fromTime:0 toTime:0];
+      // Enumerate assets within the collection
+      PHFetchResult<PHAsset *> *const assetsFetchResult = [PHAsset fetchAssetsInAssetCollection:obj options:assetFetchOptions];
+      if (assetsFetchResult.count > 0) {
+        [result addObject:@{
+          @"title": [obj localizedTitle],
+          @"count": @(assetsFetchResult.count)
+        }];
+      }
+    }];
+  }
   resolve(result);
 }
 

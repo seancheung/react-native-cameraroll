@@ -132,6 +132,7 @@ declare namespace CameraRoll {
 
   interface GetAlbumsParams {
     assetType?: AssetType;
+    includeSmartAlbums?: boolean;
   }
 
   interface Album {
