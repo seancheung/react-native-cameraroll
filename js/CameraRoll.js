@@ -71,6 +71,11 @@ export type GetPhotosParams = {
   assetType?: $Keys<typeof ASSET_TYPE_OPTIONS>,
 
   /**
+   * Whether to include smart albums in results
+   */
+  includeSmartAlbums?: boolean,
+
+  /**
    * Earliest time to get photos from. A timestamp in milliseconds. Exclusive.
    */
   fromTime?: number,

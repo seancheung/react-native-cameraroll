@@ -64,6 +64,11 @@ declare namespace CameraRoll {
     assetType?: AssetType;
 
     /**
+     * Whether to include smart albums in results
+     */
+    includeSmartAlbums?: boolean;
+
+    /**
      * Filter by creation time with a timestamp in milliseconds. This time is
      * exclusive, so we'll select all photos with `timestamp > fromTime`.
      */

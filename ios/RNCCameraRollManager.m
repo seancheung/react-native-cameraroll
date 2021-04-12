@@ -260,6 +260,7 @@ RCT_EXPORT_METHOD(getPhotos:(NSDictionary *)params
   NSString *const groupName = [RCTConvert NSString:params[@"groupName"]];
   NSString *const groupTypes = [[RCTConvert NSString:params[@"groupTypes"]] lowercaseString];
   NSString *const mediaType = [RCTConvert NSString:params[@"assetType"]];
+  BOOL const includeSmartAlbums = [params objectForKey:@"includeSmartAlbums"] ? [RCTConvert BOOL:params[@"includeSmartAlbums"]] : NO;
   NSUInteger const fromTime = [RCTConvert NSInteger:params[@"fromTime"]];
   NSUInteger const toTime = [RCTConvert NSInteger:params[@"toTime"]];
   NSArray<NSString *> *const mimeTypes = [RCTConvert NSStringArray:params[@"mimeTypes"]];
@@ -407,14 +408,21 @@ RCT_EXPORT_METHOD(getPhotos:(NSDictionary *)params
       currentCollectionName = @"All Photos";
       [assetFetchResult enumerateObjectsUsingBlock:collectAsset];
     } else {
-      PHFetchResult<PHAssetCollection *> *const assetCollectionFetchResult = [PHAssetCollection fetchAssetCollectionsWithType:collectionType subtype:collectionSubtype options:collectionFetchOptions];
-      [assetCollectionFetchResult enumerateObjectsUsingBlock:^(PHAssetCollection * _Nonnull assetCollection, NSUInteger collectionIdx, BOOL * _Nonnull stopCollections) {
-        // Enumerate assets within the collection
-        PHFetchResult<PHAsset *> *const assetsFetchResult = [PHAsset fetchAssetsInAssetCollection:assetCollection options:assetFetchOptions];
-        currentCollectionName = [assetCollection localizedTitle];
-        [assetsFetchResult enumerateObjectsUsingBlock:collectAsset];
-        *stopCollections = stopCollections_;
-      }];
+      PHFetchResult<PHAssetCollection *> *const albumCollectionFetchResult = [PHAssetCollection fetchAssetCollectionsWithType:collectionType subtype:collectionSubtype options:collectionFetchOptions];
+      NSArray *collectionFetchResult = @[albumCollectionFetchResult];
+      if (includeSmartAlbums) {
+        PHFetchResult<PHAssetCollection *> *const smartCollectionFetchResult = [PHAssetCollection fetchAssetCollectionsWithType:PHAssetCollectionTypeSmartAlbum subtype:PHAssetCollectionSubtypeAny options:collectionFetchOptions];
+        collectionFetchResult = [collectionFetchResult arrayByAddingObject:smartCollectionFetchResult];
+      }
+      for (PHFetchResult *assetCollectionFetchResult in collectionFetchResult) {
+        [assetCollectionFetchResult enumerateObjectsUsingBlock:^(PHAssetCollection * _Nonnull assetCollection, NSUInteger collectionIdx, BOOL * _Nonnull stopCollections) {
+          // Enumerate assets within the collection
+          PHFetchResult<PHAsset *> *const assetsFetchResult = [PHAsset fetchAssetsInAssetCollection:assetCollection options:assetFetchOptions];
+          currentCollectionName = [assetCollection localizedTitle];
+          [assetsFetchResult enumerateObjectsUsingBlock:collectAsset];
+          *stopCollections = stopCollections_;
+        }];
+      }
     }
 
     // If we get this far and haven't resolved the promise yet, we reached the end of the list of photos
